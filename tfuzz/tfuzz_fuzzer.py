@@ -47,7 +47,7 @@ class Fuzzer(object):
                 # the seed results in timeout
                 self.tmout_inputs.append(sf)
             else:
-                seeds.append(file(sf).read())
+                seeds.append(open(sf, "br").read())
         logger.debug("Classifying the seeds for %s ended", tprogram.program_name)
 
         use_qemu = False
@@ -99,9 +99,8 @@ class Fuzzer(object):
                              % (subdir, afl_instance))
 
         subdir = os.path.join(self._fuzzer.out_dir, afl_instance, subdir)
-        generated_files = filter(lambda x: x.startswith('id:'),
-                                 os.listdir(subdir))
-        return map(lambda x: os.path.join(subdir, x), generated_files)
+        generated_files = [x for x in os.listdir(subdir) if x.startswith('id:')]
+        return [os.path.join(subdir, x) for x in generated_files]
 
     def generated_inputs(self, afl_instance='fuzzer-master'):
         return self.__find_generated_files(afl_instance, 'queue')
@@ -111,18 +110,16 @@ class Fuzzer(object):
 
     def crash_seeds(self):
         cs_dir = os.path.join(self._fuzzer.job_dir, 'crashing_seeds')
-        cs_files =  filter(lambda x: x.startswith('crash_seed_'),
-                                 os.listdir(cs_dir))
+        cs_files =  [x for x in os.listdir(cs_dir) if x.startswith('crash_seed_')]
 
-        return map(lambda x: os.path.join(cs_dir, x), cs_files)
+        return [os.path.join(cs_dir, x) for x in cs_files]
 
 
     def timeout_seeds(self):
         timeout_seed_dir = os.path.join(self._fuzzer.job_dir, 'tmout_seeds')
-        timeout_seed_files =  filter(lambda x: x.startswith('tmout_seed_'),
-                                 os.listdir(cs_dir))
+        timeout_seed_files =  [x for x in os.listdir(cs_dir) if x.startswith('tmout_seed_')]
 
-        return map(lambda x: os.path.join(cs_dir, x), cs_files)
+        return [os.path.join(cs_dir, x) for x in cs_files]
 
     def failed_to_start(self):
         afl_log_file = os.path.join(self._fuzzer.job_dir, 'fuzzer-master.log')
@@ -201,7 +198,7 @@ class Fuzzer(object):
             os.makedirs(os.path.dirname(self.stat_file))
 
         with open(self.stat_file, 'w') as f:
-            for key, val in self.stat.items():
+            for key, val in list(self.stat.items()):
                 f.write("%s:%s\n" % (key, val))
 
     def __del__(self):

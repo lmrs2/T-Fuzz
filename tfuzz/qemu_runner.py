@@ -25,11 +25,11 @@ class RunnerEnvironmentError(Exception):
     pass
 
 def binary_type(binary):
-    with file(binary) as f:
+    with open(binary, "rb") as f:
         f4 = f.read(4)
-        if f4[1:] == "CGC":
+        if f4[1:] == b"CGC":
             return "cgc"
-        elif f4[1:] == "ELF":
+        elif f4[1:] == b"ELF":
             return "elf"
 
         return "Other"
@@ -56,7 +56,7 @@ class QEMURunner(object):
         self._record_trace = record_trace
         self.input = input
 
-        if isinstance(seed, (int, long)):
+        if isinstance(seed, int):
             seed = str(seed)
         self._seed = seed
         self._memory_limit = memory_limit

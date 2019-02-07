@@ -1,0 +1,6 @@
+#!/bin/sh
+
+LIB_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
+. $LIB_DIR/scripts/kernel_config.sh 2>&1 1>/dev/null || exit 255
+
+$LIB_DIR/TFuzz $@

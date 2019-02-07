@@ -37,7 +37,7 @@ class TFuzzSys():
 
         # TODO: Add resuming feature
         if os.path.exists(workdir):
-            print("%s already exist" % (workdir))
+            print(("%s already exist" % (workdir)))
             raise Exception()
 
         # preparing seeds
@@ -55,14 +55,16 @@ class TFuzzSys():
 
         os.makedirs(original_tprogram_dir)
         shutil.copyfile(binary_path, original_tprogram_path)
-        os.chmod(original_tprogram_path, 0777)
+        os.chmod(original_tprogram_path, 0o777)
 
         self.dict_file = os.path.join(self.workdir,
                                       self.origin_binary_name + '.dict')
+       
         create_dict(self.origin_binary_path, self.dict_file)
+        
         if '-x' not in self.afl_opts:
             self.afl_opts = ['-x', self.dict_file] + self.afl_opts
-
+        
         self.original_tprogram = TProgram(original_tprogram_path)
         self.__queue.append(self.original_tprogram)
 
@@ -202,7 +204,7 @@ class TFuzzSys():
                     pass
 
                 shutil.copyfile(self.fuzzing_program.program_path, transformed_program_path)
-                os.chmod(transformed_program_path, 0777)
+                os.chmod(transformed_program_path, 0o777)
                 transformed_tprogram = TProgram(transformed_program_path)
 
                 transformed_tprogram.c_all_instr_addrs = self.fuzzing_program.c_all_instr_addrs[:]

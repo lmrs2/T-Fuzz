@@ -4,6 +4,7 @@ import argparse
 import capstone
 import archinfo
 import re
+import struct
 from contextlib import contextmanager
 
 class Radare2(object):
@@ -31,7 +32,7 @@ class Radare2(object):
 
 
         if self.arch == 'x86':
-            if self.bits == '64':
+            if self.bits == 64:
                 self.archinfo = archinfo.ArchAMD64
             else:
                 self.archinfo = archinfo.ArchX86
@@ -65,18 +66,16 @@ class Radare2(object):
         '''
         self.r2.cmd('s ' + hex(addr))
 
-        return self.r2.cmdj('pcj ' + str(n))
+        code_byte_array = self.r2.cmdj('pcj ' + str(n))
+        return b''.join(struct.pack("B", e) for e in code_byte_array)
 
     def get_cjump_addr(self, blk_addr):
         code_byte_array = self.get_bytes_n(blk_addr, 1024)
-        code_char_array = [chr(b) for b in code_byte_array]
-        code_str = ''.join(code_char_array)
-        gen = self.md.disasm(code_str, blk_addr)
-
+        gen = self.md.disasm(code_byte_array, blk_addr)
         for i in gen:
             if i.mnemonic.startswith('j') and i.mnemonic != 'jmp':
-                # print("Found a jump instruction at %s(%d): %s"%(hex(i.address), i.size,
-                #                                                i.mnemonic + ' ' + i.op_str))
+                print("Found a jump instruction at %s(%d): %s"%(hex(i.address), i.size,
+                                                               i.mnemonic + ' ' + i.op_str))
                 return i.address
 
         print("Conditional jump instruction not found")
@@ -114,20 +113,20 @@ class Radare2(object):
         x86_jmp_map = x86_jmp_pairs.copy()
 
         # add the reverse map
-        for ji in x86_jmp_pairs.keys():
+        for ji in list(x86_jmp_pairs.keys()):
             x86_jmp_map[x86_jmp_pairs[ji]] = ji
 
         code_byte_array = self.get_bytes_n(cjump_inst_addr, 1024)
-        code_char_array = [chr(b) for b in code_byte_array]
-        code_str = ''.join(code_char_array)
-        gen = self.md.disasm(code_str, cjump_inst_addr)
+        # code_char_array = [chr(b) for b in code_byte_array]
+        # code_str = ''.join(code_char_array)
+        gen = self.md.disasm(code_byte_array, cjump_inst_addr)
 
-        i = gen.next()
+        i = next(gen)
 
         # we use this heuristic to determine it is a jump instruction
         if i.mnemonic not in x86_jmp_map:
-            print("It is not a conditional jump instruction at @%s:%s" %
-                  (hex(cjump_inst_addr), i.mnemonic + ' ' + i.op_str))
+            print(("It is not a conditional jump instruction at @%s:%s" %
+                  (hex(cjump_inst_addr), i.mnemonic + ' ' + i.op_str)))
             return
 
         self.r2.cmd('s ' + str(i.address))

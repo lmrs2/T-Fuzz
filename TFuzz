@@ -19,6 +19,7 @@ def main():
     parser.add_argument('--work_dir', required=True, help='the work directory for tfuzz')
     parser.add_argument('--seed_dir', help='the work directory of initial seeds')
     parser.add_argument('--target_opts', help='The options to pass to the argument')
+    parser.add_argument('--afl_opts', help='The options to pass to AFL')
     parser.add_argument('-v', "--verbose", help='Increase the logging verbosity',
                         action='store_true')
     parser.add_argument('--ph', default='@@', help='The place holder for input file to fuzz')
@@ -29,7 +30,7 @@ def main():
         logging.getLogger('tfuzz').setLevel(logging.DEBUG)
 
     program = os.path.abspath(args.program)
-    print(program)
+
     if not os.path.exists(program):
         print("%s does not exist" % (args.program))
         sys.exit(-1)
@@ -49,8 +50,13 @@ def main():
     else:
         argv = None
 
+    if args.afl_opts != None:
+        afl_opts = args.afl_opts.split(' ')
+    else:
+        afl_opts = None
+        
     tfuzzsys = TFuzzSys(program, work_dir, target_opts=argv,
-                        input_placeholder=args.ph, seed_files=seeds)
+                        input_placeholder=args.ph, seed_files=seeds, afl_opts=afl_opts)
 
     tfuzzsys.run()
 

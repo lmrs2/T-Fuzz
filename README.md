@@ -6,79 +6,49 @@ T-Fuzz consists of 2 components:
   programs are true bugs in the original program or not (coming soon).
 
 
-# OS support
+To see the original installation procedure, see [T-Fuzz official repo](https://github.com/HexHive/T-Fuzz).
 
-The current version is tested only on Ubuntu-16.04, while trying to run the code,
-please use our tested OS.
-
-# Prerequisite
-
-T-Fuzz system is built on several opensource tools.
-- [angr](https://github.com/angr/angr)
-- [shellphish fuzzer](https://github.com/shellphish/fuzzer)
-- [angr tracer](https://github.com/angr/tracer)
-- [radare2](https://github.com/radare/radare2) and its python
-  wrapper [r2pipe](https://github.com/radare/radare2-r2pipe)
-
-## Installing radare2
+## Installation for python-3.5 and Ubuntu 14.04 x64
 
 ```
+# angr/fuzzer/etc
+$ sudo apt-get install software-properties-common
+$ sudo add-apt-repository ppa:deadsnakes/ppa
+$ sudo apt-get update
+$ sudo apt-get install python3.5-dev libffi-dev build-essential virtualenvwrapper
+$ mkvirtualenv --python=$(which python3.5) tfuzz-env # now we're in the env
+
+$ pip install --upgrade pip
+$ pip install --upgrade setuptools
+$ UNICORN_QEMU_FLAGS="--python=/usr/bin/python2.7" pip install unicorn
+$ python -m pip install angr
+
+$ sudo apt-get install build-essential gcc-multilib debootstrap debian-archive-keyring libtool # automake, autoconf already installed
+$ sudo apt-get build-dep qemu
+$ pip install git+https://github.com/shellphish/shellphish-afl
+$ pip install git+https://github.com/shellphish/fuzzer
+
+# T-Fuzz
+$ pip install subprocess32 r2pipe intervaltree
 $ git clone https://github.com/radare/radare2.git
-$ cd radare2
-$ ./sys/install.sh
-```
-
-## Installing python libraries
-
-### installing some dependent libraries
-
-> Note: to use `apt-get build-dep`, you need to uncomment the deb-src lines in your apt source
-> file (/etc/apt/sources.list) and run apt-get update.
-
-```
-$ sudo apt-get install build-essential gcc-multilib libtool automake autoconf bison debootstrap debian-archive-keyring
-$ sudo apt-get build-dep qemu-system
-$ sudo apt-get install libacl1-dev
-```
-
-
-### installing pip and setting up virtualenv &  wrapper
-
-```
-$ sudo apt-get install python-pip python-virtualenv
-$ pip install virtualenvwrapper
-```
-
-Add the following lines to your shell rc file (`~/.bashrc` or `~/.zshrc`).
-
-```
-export WORKON_HOME=$HOME/.virtual_envs
-source /usr/local/bin/virtualenvwrapper.sh
-```
-
-### Creating a python virtual environment
-
-```
-$ mkvirtualenv tfuzz-env
-```
-
-### Installing dependent libraries
-
-This command will install all the dependent python libraries for you.
-
-```
-$ workon tfuzz-env
-$ pip install -r req.txt
+$ cd radare2 && sys/user.sh && cd -
+# TODO: add $HOME/bin to your PATH, e.g., .bashrc
+$ git clone git@github.sisa.samsung.com:KnoxSecurity/TFuzz.git
+$ cd T-Fuzz
 ```
 
 # Fuzzing target programs with T-Fuzz
 
 ```
-$ ./TFuzz  --program  <path_to_target_program> --work_dir <work_dir> --target_opts <target_opts>
+# first instrument the program/binary. Note: angr may be installed somewhere else?
+$ AFL_CC=`llvm-config-XX --bindir`/clang ~/.virtualenvs/angr/bin/afl-unix/afl-clang <program> -o <program>.afl
+
+# then fuzz, example (@@ indicates input file like for AFL):
+$ ./TFuzzLauncher  --program <program.afl> --work_dir <work_dir> --target_opts "-d @@"
 ```
 
 Where
-- <path_to_target_program>: the path to the target program to fuzz
+- <program.afl>: the path to the target program to fuzz
 - <work_dir>: the directory to save the results
 - <target_opts>: the options to pass to the target program, like AFL, use `@@` as
   		 placeholder for files to mutate.
@@ -89,25 +59,25 @@ Where
 1. Fuzzing base64 with T-Fuzz
 
 ```
-$ ./TFuzz  --program  target_programs/base64  --work_dir workdir_base64 --target_opts "-d @@"
+$ ./TFuzzLauncher  --program  target_programs/base64  --work_dir workdir_base64 --target_opts "-d @@"
 ```
 
 2. Fuzzing uniq with T-Fuzz
 
 ```
-$ ./TFuzz  --program  target_programs/uniq  --work_dir workdir_uniq --target_opts "@@"
+$ ./TFuzzLauncher  --program  target_programs/uniq  --work_dir workdir_uniq --target_opts "@@"
 ```
 
 3. Fuzzing md5sum with T-Fuzz
 
 ```
-$ ./TFuzz  --program  target_programs/md5sum  --work_dir workdir_md5sum --target_opts "-c @@"
+$ ./TFuzzLauncher  --program  target_programs/md5sum  --work_dir workdir_md5sum --target_opts "-c @@"
 ```
 
 4. Fuzzing who with T-Fuzz
 
 ```
-$ ./TFuzz  --program  target_programs/who  --work_dir workdir_who --target_opts "@@"
+$ ./TFuzzLauncher  --program  target_programs/who  --work_dir workdir_who --target_opts "@@"
 ```
 
 # Using CrashAnalyzer to verify crashes

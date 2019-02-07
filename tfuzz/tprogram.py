@@ -8,12 +8,11 @@ import threading
 import time
 import itertools
 import stat
-import ConfigParser
+import configparser
 # from graphviz import Digraph
 
 import angr
 import fuzzer
-import tracer
 
 from . import r2
 from . import cov
@@ -31,7 +30,7 @@ class TProgram(object):
 
         self.config_file = self.program_path + '.meta'
         self.config_section_name = 'tmeta'
-        self.config = ConfigParser.RawConfigParser()
+        self.config = configparser.RawConfigParser()
         self.__parent = None
 
         self.__init_seed_from_parenet = []
@@ -57,7 +56,7 @@ class TProgram(object):
         QUICK HACK by checking the magic values
         '''
         ret = False
-        with open(self.program_path, 'r') as f:
+        with open(self.program_path, 'rb') as f:
             f4 = f.read(4)
             if f4[1:] == "CGC":
                 ret = True

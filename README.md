@@ -33,7 +33,7 @@ $ pip install subprocess32 r2pipe intervaltree
 $ git clone https://github.com/radare/radare2.git
 $ cd radare2 && sys/user.sh && cd -
 # TODO: add $HOME/bin to your PATH, e.g., .bashrc
-$ git clone git@github.sisa.samsung.com:KnoxSecurity/TFuzz.git
+$ git clone https://github.com/lmrs2/T-Fuzz.git
 $ cd T-Fuzz
 ```
 
